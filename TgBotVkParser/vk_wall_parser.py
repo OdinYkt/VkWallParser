@@ -3,12 +3,18 @@ import logging
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 
 
 def setup_driver() -> WebDriver:
     logging.basicConfig(level=logging.INFO)
     service = Service(executable_path=ChromeDriverManager().install())
-    return WebDriver(service=service)
+    options = Options()
+    options.add_argument("headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
+    return WebDriver(service=service, options=options)
 
 
 # # Определим датакласс для хранения данных постов
