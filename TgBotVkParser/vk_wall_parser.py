@@ -89,7 +89,7 @@ class PostElement:
         try:
             wait(
                 get_element,
-                timeout_seconds=1
+                timeout_seconds=0.5
             )
         except TimeoutExpired:
             return False
@@ -219,7 +219,7 @@ class VkParser:
         post_collector = self._get_post_collector()
         for post in post_collector:
             if abs(post.date - self.now) > time_delta:
-                logging.info(f"Post id='{post.id}' doesn't match delta: '{time_delta}'")
+                logging.info(f"Post id='{post.id}' delta: '{time_delta}'")
                 logging.info(f"Collected : {len(posts)} posts")
                 return posts
             logging.info(f"Post {post} collected")
@@ -232,4 +232,4 @@ class VkParser:
 
 if __name__ == "__main__":
     parser = VkParser(group_name=VK_GROUP_NAME)
-    parsed_posts = parser.get_posts(time_delta=timedelta(days=3))
+    parsed_posts = parser.get_posts(time_delta=timedelta(days=2))
