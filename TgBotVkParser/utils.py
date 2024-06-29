@@ -1,15 +1,10 @@
-import locale
 from datetime import datetime, timedelta, time, date
-from enum import Enum
 from functools import wraps
 
 from constants import IS_LINUX
 
 if IS_LINUX:
     from xvfbwrapper import Xvfb
-    locale.setlocale(locale.LC_ALL, 'ru_RU.utf8')
-else:
-    locale.setlocale(locale.LC_ALL, 'ru_RU')
 
 
 def ONLY_LINUX(func):
@@ -48,7 +43,7 @@ def parse_vk_datetime(date_str: str) -> datetime:
     def relative(days: int) -> datetime:
         return datetime.combine(
             date=today - timedelta(days=days),
-            time=time.fromisoformat(get_correct_time(time_str))
+            time=datetime.strptime(get_correct_time(time_str), "%H:%M %p").time()
         )
 
     def get_correct_time(time_str_: str):
@@ -57,16 +52,16 @@ def parse_vk_datetime(date_str: str) -> datetime:
         return time_str_
 
     today = datetime.today()
-    time_str = date_str.split()[-1]
-    if 'вчера' in date_str:
-        return relative(1)
-    if 'сегодня' in date_str:
+    time_str = ' '.join(date_str.split()[-2:]).upper()
+    if 'today' in date_str:
         return relative(0)
+    if 'yesterday' in date_str:
+        return relative(1)
 
     day_str = ' '.join(date_str.split()[:3])
 
-    day_ = datetime.strptime(day_str, "%d %b в")
-    time_ = datetime.strptime(time_str, "%H:%M")
+    day_ = datetime.strptime(day_str, "%d %b at")
+    time_ = datetime.strptime(time_str, "%H:%M %p")
 
     return datetime.combine(
         date=date(year=today.year, month=day_.month, day=day_.day),

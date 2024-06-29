@@ -25,6 +25,8 @@ def setup_driver() -> WebDriver:
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
+    options.add_experimental_option('prefs', {'intl.accept_languages': 'en,en_US'})
+
     return WebDriver(service=service, options=options)
 
 
@@ -219,7 +221,7 @@ class VkParser:
         post_collector = self._get_post_collector()
         for post in post_collector:
             if abs(post.date - self.now) > time_delta:
-                logging.info(f"Post id='{post.id}' delta: '{time_delta}'")
+                logging.info(f"Post doesn't match (id='{post.id}' time='{post.date}')")
                 logging.info(f"Collected : {len(posts)} posts")
                 return posts
             logging.info(f"Post {post} collected")
@@ -232,4 +234,4 @@ class VkParser:
 
 if __name__ == "__main__":
     parser = VkParser(group_name=VK_GROUP_NAME)
-    parsed_posts = parser.get_posts(time_delta=timedelta(days=2))
+    parsed_posts = parser.get_posts(time_delta=timedelta(days=1))
