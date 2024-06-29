@@ -7,8 +7,9 @@ from constants import IS_LINUX
 
 if IS_LINUX:
     from xvfbwrapper import Xvfb
-
-locale.setlocale(locale.LC_ALL, 'ru_RU')
+    locale.setlocale(locale.LC_ALL, 'ru_RU.utf8')
+else:
+    locale.setlocale(locale.LC_ALL, 'ru_RU')
 
 
 def ONLY_LINUX(func):
