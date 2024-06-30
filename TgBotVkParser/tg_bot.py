@@ -15,7 +15,7 @@ from constants import TG_BOT_TOKEN, TG_GROUP_ID, INTERVAL_HOURS, VK_GROUP_NAME, 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 
-async def send_posts(time_delta: timedelta):
+async def send_posts(update: Update, time_delta: timedelta):
     @retry_on_exception()
     async def _send_message():
         return await bot.send_message(
@@ -39,9 +39,19 @@ async def send_posts(time_delta: timedelta):
             text=reply_to_post
         )
 
+    @retry_on_exception()
+    async def _posts_not_found():
+        await bot.send_message(
+            chat_id=update.effective_chat.id,
+            text='Посты для обновления не обнаружены.'
+        )
+
     logging.info("VK PARSER ENABLED")
     parser = VkParser(group_name=VK_GROUP_NAME)
     posts = parser.get_posts(time_delta=time_delta)
+    if not posts:
+        await _posts_not_found()
+
     logging.info('Start sending posts to group')
     for post in posts[::-1]:
         post_body = f"{post.text}\n" \
@@ -92,10 +102,10 @@ async def send_posts(time_delta: timedelta):
     logging.info('Done...')
 
 
-async def send_posts_job(interval: int):
+async def send_posts_job(update, interval: int):
     while True:
-        await send_posts(timedelta(hours=interval))
         await asyncio.sleep(interval * 3600)
+        await send_posts(update, timedelta(hours=interval))
 
 
 async def start(update, context):
@@ -109,7 +119,7 @@ async def start_parsing(update, context):
         return
 
     await update.message.reply_text(f'Бот запущен. Обновление постов каждые {INTERVAL_HOURS} часов.')
-    asyncio.create_task(send_posts_job(INTERVAL_HOURS))
+    asyncio.create_task(send_posts_job(update, int(INTERVAL_HOURS)))
 
 
 async def force_send_posts(update, context):
