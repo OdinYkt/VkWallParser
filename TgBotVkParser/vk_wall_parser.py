@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 
 from waiting import wait, TimeoutExpired
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.common import NoSuchElementException, ElementNotInteractableException
+from selenium.common import NoSuchElementException, ElementNotInteractableException, ElementClickInterceptedException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -17,7 +17,7 @@ from constants import VK_GROUP_NAME, IS_LINUX
 
 
 def setup_driver() -> WebDriver:
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
     service = Service(executable_path=ChromeDriverManager().install())
     options = Options()
     if IS_LINUX:
@@ -75,8 +75,8 @@ class PostElement:
         while is_closed() or try_counter > 10:
             try:
                 get_element().click()
-            except ElementNotInteractableException:
-                logging.error(f"Error while clicking 'Показать еще'. Try:#{try_counter}")
+            except (ElementNotInteractableException, ElementClickInterceptedException):
+                logging.error(f"Error while clicking 'Show more'. Try:#{try_counter}")
             try_counter += 1
 
     def focus(self):
@@ -154,7 +154,7 @@ class PostElement:
         def get_text():
             return self.element.find_element(By.CLASS_NAME, "wall_post_text").text
 
-        if get_text().endswith("Показать ещё"):
+        if get_text().endswith("Show more"):
             self.click_show_more()
         return get_text()
 
@@ -190,6 +190,9 @@ class PostCollector:
         self._current_element = 0
         self.wall_element = self.driver.find_element(By.ID, "page_wall_posts")
 
+    def close_driver(self):
+        self.driver.close()
+
     def all_posts(self):
         return self.wall_element.find_elements(By.CLASS_NAME, "post")
 
@@ -223,6 +226,8 @@ class VkParser:
             if abs(post.date - self.now) > time_delta:
                 logging.info(f"Post doesn't match (id='{post.id}' time='{post.date}')")
                 logging.info(f"Collected : {len(posts)} posts")
+
+                post_collector.close_driver()
                 return posts
             logging.info(f"Post {post} collected")
             posts.append(post)

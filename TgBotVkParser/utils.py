@@ -1,5 +1,7 @@
-from datetime import datetime, timedelta, time, date
+import re
+from datetime import datetime, timedelta, date
 from functools import wraps
+from typing import Optional
 
 from constants import IS_LINUX
 
@@ -67,3 +69,29 @@ def parse_vk_datetime(date_str: str) -> datetime:
         date=date(year=today.year, month=day_.month, day=day_.day),
         time=time_.time()
     )
+
+
+def split_text_into_chunks(text, max_length_first: int, max_length_other: Optional[int] = None):
+    # Разделяем текст на предложения
+    sentences = re.split(r'(?<=[.!?])\s+|\n', text)
+
+    chunks = []
+    current_chunk = ""
+
+    if max_length_other is None:
+        max_length_other = max_length_first
+
+    cur_max_length = max_length_first
+    for sentence in sentences:
+        if len(current_chunk) + len(sentence) + 1 > cur_max_length:
+            chunks.append(current_chunk.strip())
+            current_chunk = sentence
+            cur_max_length = max_length_other
+        else:
+            current_chunk += " " + sentence
+
+    # Добавляем последний чанк
+    if current_chunk:
+        chunks.append(current_chunk.strip())
+
+    return chunks
