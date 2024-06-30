@@ -1,7 +1,12 @@
+import logging
 import re
+
+import asyncio
 from datetime import datetime, timedelta, date
 from functools import wraps
 from typing import Optional
+
+from telegram.error import RetryAfter, TimedOut
 
 from constants import IS_LINUX
 
@@ -73,7 +78,7 @@ def parse_vk_datetime(date_str: str) -> datetime:
 
 def split_text_into_chunks(text, max_length_first: int, max_length_other: Optional[int] = None):
     # Разделяем текст на предложения
-    sentences = re.split(r'(?<=[.!?])\s+|\n', text)
+    sentences = re.split(r'(?<=[.!?])(\s+|\n)', text)
 
     chunks = []
     current_chunk = ""
@@ -82,8 +87,14 @@ def split_text_into_chunks(text, max_length_first: int, max_length_other: Option
         max_length_other = max_length_first
 
     cur_max_length = max_length_first
-    for sentence in sentences:
-        if len(current_chunk) + len(sentence) + 1 > cur_max_length:
+    for i in range(0, len(sentences), 2):
+        sentence = sentences[i]
+        if i + 1 < len(sentences):
+            delimiter = sentences[i + 1]
+        else:
+            delimiter = ""
+
+        if len(current_chunk) + len(sentence) + len(delimiter) > cur_max_length:
             chunks.append(current_chunk.strip())
             current_chunk = sentence
             cur_max_length = max_length_other
@@ -95,3 +106,20 @@ def split_text_into_chunks(text, max_length_first: int, max_length_other: Option
         chunks.append(current_chunk.strip())
 
     return chunks
+
+
+def retry_on_exception(exception_type=(RetryAfter, TimedOut), n=5):
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(n):
+                try:
+                    return await func(*args, **kwargs)
+                except exception_type as e:
+                    last_exception = e
+                    logging.info(f'Не удалось отправить. Попытка #{n}')
+                    await asyncio.sleep(5)
+            logging.error('Сообщение не отправлено!')
+            raise last_exception
+        return wrapper
+    return decorator

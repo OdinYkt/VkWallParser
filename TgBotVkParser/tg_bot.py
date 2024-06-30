@@ -8,7 +8,7 @@ from telegram import Bot, Update, InputMediaPhoto
 from telegram.ext import ApplicationBuilder, CommandHandler
 
 from vk_wall_parser import VkParser
-from utils import split_text_into_chunks
+from utils import split_text_into_chunks, retry_on_exception
 from constants import TG_BOT_TOKEN, TG_GROUP_ID, INTERVAL_HOURS, VK_GROUP_NAME, TG_ADMIN_ID, TG_MAX_TEXT, \
     TG_MAX_CAPTION
 
@@ -17,6 +17,29 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 
 async def send_posts(time_delta: timedelta):
+    @retry_on_exception()
+    async def _send_message():
+        return await bot.send_message(
+            chat_id=TG_GROUP_ID,
+            text=post_body
+        )
+
+    @retry_on_exception()
+    async def _send_media_group():
+        return await bot.send_media_group(
+            chat_id=TG_GROUP_ID,
+            media=[InputMediaPhoto(media=data) for data in images_data],
+            caption=post_body
+        )
+
+    @retry_on_exception()
+    async def _send_reply_to_post():
+        return await bot.send_message(
+            chat_id=TG_GROUP_ID,
+            reply_to_message_id=group_post.message_id,
+            text=reply_to_post
+        )
+
     logging.info("VK PARSER ENABLED")
     parser = VkParser(group_name=VK_GROUP_NAME)
     posts = parser.get_posts(time_delta=time_delta)
@@ -53,29 +76,19 @@ async def send_posts(time_delta: timedelta):
             post_body = split_post_body[0]
 
         if not images_data:
-            group_post = await bot.send_message(
-                chat_id=TG_GROUP_ID,
-                text=post_body
-            )
+            group_post = await _send_message()
         else:
-            group_post = await bot.send_media_group(
-                chat_id=TG_GROUP_ID,
-                media=[InputMediaPhoto(media=data) for data in images_data],
-                caption=post_body
-            )
+            group_post = await _send_media_group()
 
         if split_post_body:
             if isinstance(group_post, tuple):
                 group_post = group_post[0]
             for reply_to_post in split_post_body[1:]:
-                time.sleep(1)
-                await bot.send_message(
-                    chat_id=TG_GROUP_ID,
-                    reply_to_message_id=group_post.message_id,
-                    text=reply_to_post
-                )
+                await asyncio.sleep(1)
+                await _send_reply_to_post()
+
         logging.info(f'Post {post.id} sent. Waiting.')
-        time.sleep(2)
+        await asyncio.sleep(2)
 
     logging.info('Done...')
 
