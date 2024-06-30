@@ -1,6 +1,5 @@
 import logging
 import random
-import time
 from datetime import timedelta
 
 import requests
@@ -44,7 +43,7 @@ async def send_posts(time_delta: timedelta):
     parser = VkParser(group_name=VK_GROUP_NAME)
     posts = parser.get_posts(time_delta=time_delta)
     logging.info('Start sending posts to group')
-    for post in posts:
+    for post in posts[::-1]:
         post_body = f"{post.text}\n" \
                f"Posted:{post.date.strftime('%d-%m-%Y %H:%M')}\n" \
                f"by author:{post.author if post.author else VK_GROUP_NAME}"
@@ -58,7 +57,7 @@ async def send_posts(time_delta: timedelta):
                 if image.comments:
                     images_comments.update(
                         {
-                            f'Изображение {i}': image.comments
+                            f'\nИзображение {i}': image.comments
                         }
                     )
 
