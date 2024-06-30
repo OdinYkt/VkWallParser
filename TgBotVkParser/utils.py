@@ -117,8 +117,8 @@ def retry_on_exception(exception_type=(RetryAfter, TimedOut), n=5):
                     return await func(*args, **kwargs)
                 except exception_type as e:
                     last_exception = e
-                    logging.info(f'Не удалось отправить. Попытка #{n}')
-                    await asyncio.sleep(5)
+                    logging.info(f'Не удалось отправить. Попытка #{attempt}')
+                    await asyncio.sleep(10)
             logging.error('Сообщение не отправлено!')
             raise last_exception
         return wrapper
