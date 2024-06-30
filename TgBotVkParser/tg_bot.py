@@ -51,6 +51,8 @@ async def send_posts(update: Update, time_delta: timedelta):
     posts = parser.get_posts(time_delta=time_delta)
     if not posts:
         await _posts_not_found()
+        logging.info('POSTS NOT FOUND.')
+        return
 
     logging.info('Start sending posts to group')
     for post in posts[::-1]:
