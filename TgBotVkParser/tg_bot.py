@@ -1,3 +1,4 @@
+import datetime
 import logging
 import random
 from datetime import timedelta
@@ -111,7 +112,7 @@ async def send_posts_job(update, interval: int):
 
 
 async def start(update, context):
-    await update.message.reply_text('Бот жив.')
+    await update.message.reply_text(f'Бот жив. Запущен: {STARTED.strftime("%d-%m-%Y %H:%M")}')
 
 
 async def start_parsing(update, context):
@@ -119,6 +120,12 @@ async def start_parsing(update, context):
         await update.message.reply_text(f'С вашего счёта списано: 0.{random.randint(1, 100)} USD\n'
                                         f'Свяжитесь с @OdinYkt')
         return
+
+    global PARSING_ENABLED
+    if PARSING_ENABLED:
+        await update.message.reply_text(f'Парсинг уже был активирован.')
+        return
+    PARSING_ENABLED = True
 
     await update.message.reply_text(f'Бот запущен. Обновление постов каждые {INTERVAL_HOURS} часов.')
     asyncio.create_task(send_posts_job(update, int(INTERVAL_HOURS)))
@@ -136,7 +143,7 @@ async def force_send_posts(update, context):
         await update.message.reply_text("Аргумент команды - количество дней. Введите команду корректно.")
     else:
         await update.message.reply_text(f"Принудительный скан постов за {days} дней")
-        await send_posts(time_delta=timedelta(days=days))
+        await send_posts(update, time_delta=timedelta(days=days))
 
 
 def main():
@@ -153,4 +160,7 @@ def main():
 
 if __name__ == '__main__':
     import asyncio
+    global PARSING_ENABLED
+    STARTED = datetime.datetime.now()
+    PARSING_ENABLED = False
     main()
