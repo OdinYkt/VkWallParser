@@ -7,10 +7,11 @@ import requests
 from telegram import Bot, Update, InputMediaPhoto
 from telegram.ext import ApplicationBuilder, CommandHandler
 
-from TgBotVkParser.utils import split_text_into_chunks
+from vk_wall_parser import VkParser
+from utils import split_text_into_chunks
 from constants import TG_BOT_TOKEN, TG_GROUP_ID, INTERVAL_HOURS, VK_GROUP_NAME, TG_ADMIN_ID, TG_MAX_TEXT, \
     TG_MAX_CAPTION
-from vk_wall_parser import VkParser
+
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
