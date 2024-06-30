@@ -62,7 +62,7 @@ async def send_posts(time_delta: timedelta):
                     )
 
         if images_comments:
-            post_body += '\n'.join([f'{key}: {value}' for key, value in images_comments.items()])
+            post_body += '\n'.join([f'{key}: {value}\n' for key, value in images_comments.items()])
 
         split_post_body = None
 
