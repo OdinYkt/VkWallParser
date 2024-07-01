@@ -1,22 +1,26 @@
-import datetime
-import logging
 import random
 from datetime import timedelta
+from typing import Optional
 
 import requests
 from telegram import Bot, Update, InputMediaPhoto
 from telegram.ext import ApplicationBuilder, CommandHandler
 
 from vk_wall_parser import VkParser
-from utils import split_text_into_chunks, retry_on_exception
-from constants import TG_BOT_TOKEN, TG_GROUP_ID, INTERVAL_HOURS, VK_GROUP_NAME, TG_ADMIN_ID, TG_MAX_TEXT, \
-    TG_MAX_CAPTION
+from utils import split_text_into_chunks, retry_on_exception, app_logger
+from constants import (
+    TG_BOT_TOKEN,
+    TG_GROUP_ID,
+    INTERVAL_HOURS,
+    VK_GROUP_NAME,
+    TG_ADMIN_ID,
+    TG_MAX_TEXT,
+    TG_MAX_CAPTION,
+    AppState
+)
 
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-
-
-async def send_posts(update: Update, time_delta: timedelta):
+async def send_posts(admin_chat_id: int, time_delta: timedelta):
     @retry_on_exception()
     async def _send_message():
         return await bot.send_message(
@@ -42,20 +46,24 @@ async def send_posts(update: Update, time_delta: timedelta):
 
     @retry_on_exception()
     async def _posts_not_found():
+
+        if not admin_chat_id:
+            app_logger.critical('WRONG admin_chat_id!')
+            return
         await bot.send_message(
-            chat_id=update.effective_chat.id,
+            chat_id=admin_chat_id,
             text='Посты для обновления не обнаружены.'
         )
 
-    logging.info("VK PARSER ENABLED")
+    app_logger.info("VK PARSER ENABLED")
     parser = VkParser(group_name=VK_GROUP_NAME)
     posts = parser.get_posts(time_delta=time_delta)
     if not posts:
         await _posts_not_found()
-        logging.info('POSTS NOT FOUND.')
+        app_logger.info('POSTS NOT FOUND.')
         return
 
-    logging.info('Start sending posts to group')
+    app_logger.info('Start sending posts to group')
     for post in posts[::-1]:
         post_body = f"{post.text}\n" \
                f"Posted:{post.date.strftime('%d-%m-%Y %H:%M')}\n" \
@@ -99,36 +107,38 @@ async def send_posts(update: Update, time_delta: timedelta):
                 await asyncio.sleep(1)
                 await _send_reply_to_post()
 
-        logging.info(f'Post {post.id} sent. Waiting.')
+        app_logger.info(f'Post {post.id} sent. Waiting.')
         await asyncio.sleep(2)
 
-    logging.info('Done...')
+    app_logger.info('Done...')
 
 
-async def send_posts_job(update, interval: int):
+async def send_posts_job(admin_chat_id: int, interval: int):
     while True:
         await asyncio.sleep(interval * 3600)
-        await send_posts(update, timedelta(hours=interval))
+        await send_posts(admin_chat_id, timedelta(hours=interval))
 
 
 async def start(update, context):
-    await update.message.reply_text(f'Бот жив. Запущен: {STARTED.strftime("%d-%m-%Y %H:%M")}')
+    await update.message.reply_text(f'Бот жив. Запущен: {AppState.STARTED}')
 
 
-async def start_parsing(update, context):
+async def start_parsing(update: Optional[Update], context):
     if update.message.from_user.id != TG_ADMIN_ID:
         await update.message.reply_text(f'С вашего счёта списано: 0.{random.randint(1, 100)} USD\n'
                                         f'Свяжитесь с @OdinYkt')
         return
 
-    global PARSING_ENABLED
-    if PARSING_ENABLED:
+    if AppState.PARSING_ENABLED:
         await update.message.reply_text(f'Парсинг уже был активирован.')
         return
-    PARSING_ENABLED = True
+    AppState.PARSING_ENABLED = True
+    if not AppState.ADMIN_CHAT_ID:
+        AppState.ADMIN_CHAT_ID = update.effective_chat.id
 
     await update.message.reply_text(f'Бот запущен. Обновление постов каждые {INTERVAL_HOURS} часов.')
-    asyncio.create_task(send_posts_job(update, int(INTERVAL_HOURS)))
+
+    asyncio.create_task(send_posts_job(AppState.ADMIN_CHAT_ID, int(INTERVAL_HOURS)))
 
 
 async def force_send_posts(update, context):
@@ -155,12 +165,17 @@ def main():
     application.add_handler(CommandHandler('start_parsing', start_parsing))
     application.add_handler(CommandHandler('force', force_send_posts))
 
+    if AppState.PARSING_ENABLED:
+        asyncio.create_task(
+            send_posts_job(
+                admin_chat_id=AppState.ADMIN_CHAT_ID,
+                interval=int(INTERVAL_HOURS)
+            )
+        )
+
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == '__main__':
     import asyncio
-    global PARSING_ENABLED
-    STARTED = datetime.datetime.now()
-    PARSING_ENABLED = False
     main()

@@ -1,6 +1,6 @@
 import logging
 import re
-
+import sys
 import asyncio
 from datetime import datetime, timedelta, date
 from functools import wraps
@@ -9,6 +9,24 @@ from typing import Optional
 from telegram.error import RetryAfter, TimedOut
 
 from constants import IS_LINUX
+
+
+def setup_logger():
+    logger = logging.getLogger('VkWallParser')
+    logger.setLevel(logging.INFO)
+
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.INFO)
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+
+    logger.addHandler(console_handler)
+    return logger
+
+
+app_logger = setup_logger()
+
 
 if IS_LINUX:
     from xvfbwrapper import Xvfb

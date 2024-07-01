@@ -1,4 +1,7 @@
 import os
+import pickle
+from datetime import datetime
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -15,3 +18,32 @@ TG_ADMIN_ID = int(os.getenv("TG_ADMIN_ID"))
 
 INTERVAL_HOURS = os.getenv("INTERVAL_HOURS")
 
+
+class _AppState:
+    def __init__(self):
+        self.__dict__['_state'] = {
+            'ADMIN_CHAT_ID': None,
+            'PARSING_ENABLED': False,
+            'STARTED': datetime.now().strftime("%d-%m-%Y %H:%M")
+        }
+        self.load_state()
+
+    def __getattr__(self, name):
+        return self.__dict__['_state'][name]
+
+    def __setattr__(self, name, value):
+        self.__dict__['_state'][name] = value
+        self.save_state()
+
+    def save_state(self):
+        with open('.app_state', 'wb') as f:
+            pickle.dump(self.__dict__, f)
+
+    def load_state(self):
+        if os.path.exists('.app_state'):
+            with open('.app_state', 'rb') as f:
+                state = pickle.load(f)
+                self.__dict__.update(state)
+
+
+AppState = _AppState()

@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
@@ -12,12 +11,11 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
-from utils import DisplayWrapper, parse_vk_datetime
+from utils import DisplayWrapper, parse_vk_datetime, app_logger
 from constants import VK_GROUP_NAME, IS_LINUX
 
 
 def setup_driver() -> WebDriver:
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
     service = Service(executable_path=ChromeDriverManager().install())
     options = Options()
     if IS_LINUX:
@@ -76,7 +74,7 @@ class PostElement:
             try:
                 get_element().click()
             except (ElementNotInteractableException, ElementClickInterceptedException):
-                logging.error(f"Error while clicking 'Show more'. Try:#{try_counter}")
+                app_logger.error(f"Error while clicking 'Show more'. Try:#{try_counter}")
             try_counter += 1
 
     def focus(self):
@@ -103,7 +101,7 @@ class PostElement:
             try:
                 self.element.parent.find_element(By.CLASS_NAME, "UnauthActionBox__close").click()
             except (NoSuchElementException, ElementNotInteractableException):
-                logging.error(f"Error while closing notification. Try:#{try_counter}")
+                app_logger.error(f"Error while closing notification. Try:#{try_counter}")
                 try_counter += 1
 
     def is_images_attached(self) -> bool:
@@ -138,7 +136,7 @@ class PostElement:
             datetime_str = self._header[0].text
             return parse_vk_datetime(datetime_str)
         except Exception as e:
-            logging.error(str(e))
+            app_logger.error(str(e))
 
         return datetime.now()
 
@@ -224,12 +222,12 @@ class VkParser:
         post_collector = self._get_post_collector()
         for post in post_collector:
             if abs(post.date - self.now) > time_delta:
-                logging.info(f"Post doesn't match (id='{post.id}' time='{post.date}')")
-                logging.info(f"Collected : {len(posts)} posts")
+                app_logger.info(f"Post doesn't match (id='{post.id}' time='{post.date}')")
+                app_logger.info(f"Collected : {len(posts)} posts")
 
                 post_collector.close_driver()
                 return posts
-            logging.info(f"Post {post} collected")
+            app_logger.info(f"Post {post} collected")
             posts.append(post)
 
     def _get_post_collector(self) -> PostCollector:
