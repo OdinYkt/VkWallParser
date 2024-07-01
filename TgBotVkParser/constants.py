@@ -21,7 +21,7 @@ INTERVAL_HOURS = os.getenv("INTERVAL_HOURS")
 
 
 class _AppState:
-    FILE_PATH = Path('.app_state')
+    FILE_PATH = Path(__file__).parent / ".app_state"
 
     def __init__(self):
         self.__dict__['_state'] = {
