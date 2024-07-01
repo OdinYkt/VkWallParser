@@ -1,10 +1,11 @@
 import random
+import asyncio
 from datetime import timedelta
 from typing import Optional
 
 import requests
 from telegram import Bot, Update, InputMediaPhoto
-from telegram.ext import ApplicationBuilder, CommandHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, Application
 
 from vk_wall_parser import VkParser
 from utils import split_text_into_chunks, retry_on_exception, app_logger
@@ -156,26 +157,29 @@ async def force_send_posts(update, context):
         await send_posts(update, time_delta=timedelta(days=days))
 
 
-def main():
-    global bot
-    bot = Bot(TG_BOT_TOKEN)
-    application = ApplicationBuilder().token(TG_BOT_TOKEN).build()
-
-    application.add_handler(CommandHandler('start', start))
-    application.add_handler(CommandHandler('start_parsing', start_parsing))
-    application.add_handler(CommandHandler('force', force_send_posts))
-
+async def post_init(application: Application):
     if AppState.PARSING_ENABLED:
-        asyncio.create_task(
+        app_logger.critical('Бот был перезапущен после падения!')
+        await asyncio.create_task(
             send_posts_job(
                 admin_chat_id=AppState.ADMIN_CHAT_ID,
                 interval=int(INTERVAL_HOURS)
             )
         )
+    app_logger.critical('Бот запущен без предварительных параметров.')
+
+
+def main():
+    global bot
+    bot = Bot(TG_BOT_TOKEN)
+    application = ApplicationBuilder().token(TG_BOT_TOKEN).post_init(post_init).build()
+
+    application.add_handler(CommandHandler('start', start))
+    application.add_handler(CommandHandler('start_parsing', start_parsing))
+    application.add_handler(CommandHandler('force', force_send_posts))
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == '__main__':
-    import asyncio
     main()

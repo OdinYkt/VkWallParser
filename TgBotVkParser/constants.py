@@ -1,5 +1,6 @@
 import os
 import pickle
+from pathlib import Path
 from datetime import datetime
 
 from dotenv import load_dotenv
@@ -20,6 +21,8 @@ INTERVAL_HOURS = os.getenv("INTERVAL_HOURS")
 
 
 class _AppState:
+    FILE_PATH = Path('.app_state')
+
     def __init__(self):
         self.__dict__['_state'] = {
             'ADMIN_CHAT_ID': None,
@@ -35,13 +38,16 @@ class _AppState:
         self.__dict__['_state'][name] = value
         self.save_state()
 
+    def clear_state(self):
+        self.FILE_PATH.unlink(True)
+
     def save_state(self):
-        with open('.app_state', 'wb') as f:
+        with open(str(self.FILE_PATH), 'wb') as f:
             pickle.dump(self.__dict__, f)
 
     def load_state(self):
-        if os.path.exists('.app_state'):
-            with open('.app_state', 'rb') as f:
+        if self.FILE_PATH.exists():
+            with open(str(self.FILE_PATH), 'rb') as f:
                 state = pickle.load(f)
                 self.__dict__.update(state)
 

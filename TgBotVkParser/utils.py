@@ -12,11 +12,12 @@ from constants import IS_LINUX
 
 
 def setup_logger():
+    logging.basicConfig()
     logger = logging.getLogger('VkWallParser')
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(formatter)
