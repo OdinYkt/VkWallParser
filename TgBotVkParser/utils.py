@@ -12,7 +12,6 @@ from constants import IS_LINUX
 
 
 def setup_logger():
-    logging.basicConfig()
     logger = logging.getLogger('VkWallParser')
     logger.setLevel(logging.DEBUG)
 
