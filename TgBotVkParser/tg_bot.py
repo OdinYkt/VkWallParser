@@ -1,3 +1,4 @@
+import datetime
 import random
 import asyncio
 from datetime import timedelta
@@ -116,6 +117,10 @@ async def send_posts(admin_chat_id: int, time_delta: timedelta):
 
 async def send_posts_job(admin_chat_id: int, interval: int):
     while True:
+        app_logger.info(
+            'Следующий запуск поиска постов '
+            f'{(datetime.datetime.now() + timedelta(hours=interval)).strftime("%d-%m-%Y %H:%M")}'
+        )
         await asyncio.sleep(interval * 3600)
         await send_posts(admin_chat_id, timedelta(hours=interval))
 
