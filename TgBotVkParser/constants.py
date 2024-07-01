@@ -27,7 +27,7 @@ class _AppState:
         self.__dict__['_state'] = {
             'ADMIN_CHAT_ID': None,
             'PARSING_ENABLED': False,
-            'STARTED': datetime.utcnow().strftime("%d-%m-%Y %H:%M")
+            'STARTED': None
         }
         self.load_state()
 

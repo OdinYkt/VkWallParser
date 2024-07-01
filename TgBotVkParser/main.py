@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from tg_bot import main
 from utils import app_logger
 from constants import AppState
@@ -5,6 +7,7 @@ from constants import AppState
 
 if __name__ == '__main__':
     try:
+        AppState.STARTED = datetime.utcnow().strftime("%d-%m-%Y %H:%M")
         main()
     except KeyboardInterrupt as e:
         app_logger.info('Clearing state before shut down')
