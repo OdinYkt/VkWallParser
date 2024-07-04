@@ -126,7 +126,8 @@ async def send_posts_job(admin_chat_id: int, interval: int):
 
 
 async def start(update, context):
-    await update.message.reply_text(f'Бот жив. Запущен: {AppState.STARTED}')
+    await update.message.reply_text(f'Бот жив. Запущен: {AppState.STARTED}. '
+                                    f'Последний перезапуск: {AppState.LAST_RESTARTED}')
 
 
 async def start_parsing(update: Optional[Update], context):

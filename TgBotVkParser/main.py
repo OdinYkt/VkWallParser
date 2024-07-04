@@ -7,7 +7,9 @@ from constants import AppState
 
 if __name__ == '__main__':
     try:
-        AppState.STARTED = datetime.utcnow().strftime("%d-%m-%Y %H:%M")
+        AppState.LAST_RESTARTED = datetime.utcnow().strftime("%d-%m-%Y %H:%M")
+        if not AppState.STARTED:
+            AppState.STARTED = datetime.utcnow().strftime("%d-%m-%Y %H:%M")
         main()
     except KeyboardInterrupt as e:
         app_logger.info('Clearing state before shut down')

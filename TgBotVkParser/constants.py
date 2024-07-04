@@ -27,7 +27,8 @@ class _AppState:
         self.__dict__['_state'] = {
             'ADMIN_CHAT_ID': None,
             'PARSING_ENABLED': False,
-            'STARTED': None
+            'STARTED': None,
+            'LAST_RESTARTED': None,
         }
         self.load_state()
 
