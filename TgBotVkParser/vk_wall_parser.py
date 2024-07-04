@@ -70,7 +70,7 @@ class PostElement:
             return bool(get_element().text)
 
         try_counter = 0
-        while is_closed() or try_counter > 10:
+        while is_closed() or try_counter < 10:
             try:
                 get_element().click()
             except (ElementNotInteractableException, ElementClickInterceptedException):
