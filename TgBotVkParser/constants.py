@@ -39,6 +39,9 @@ class _AppState:
         self.__dict__['_state'][name] = value
         self.save_state()
 
+    def get_state(self):
+        return self.__dict__['_state']
+
     def clear_state(self):
         self.FILE_PATH.unlink(True)
 

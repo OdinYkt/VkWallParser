@@ -10,6 +10,8 @@ if __name__ == '__main__':
         AppState.LAST_RESTARTED = datetime.utcnow().strftime("%d-%m-%Y %H:%M")
         if not AppState.STARTED:
             AppState.STARTED = datetime.utcnow().strftime("%d-%m-%Y %H:%M")
+
+        app_logger.info(f'Параметры после запуска: {AppState.get_state()}')
         main()
     except KeyboardInterrupt as e:
         app_logger.info('Clearing state before shut down')
