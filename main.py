@@ -1,19 +1,16 @@
 from datetime import datetime
 
-from tg_bot import main
-from utils import app_logger
-from constants import AppState
+from source.MasterBot import MasterBot
+from source.utils.app_state import APP_STATE
+from source.utils.common import app_logger
 
 
 if __name__ == '__main__':
-    try:
-        AppState.LAST_RESTARTED = datetime.utcnow().strftime("%d-%m-%Y %H:%M")
-        if not AppState.STARTED:
-            AppState.STARTED = datetime.utcnow().strftime("%d-%m-%Y %H:%M")
+    app_logger.info('Запуск...')
 
-        app_logger.info(f'Параметры после запуска: {AppState.get_state()}')
-        main()
-    except KeyboardInterrupt as e:
-        app_logger.info('Clearing state before shut down')
-        AppState.clear_state()
-        raise e
+    if not APP_STATE.FIRST_STARTED:
+        APP_STATE.FIRST_STARTED = datetime.utcnow().strftime("%d.%m.%Y %H:%M:%S")
+    APP_STATE.SCHEDULER_CREATED = False
+
+    master_bot = MasterBot()
+    master_bot.run_application()
