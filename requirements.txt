@@ -4,7 +4,8 @@ python-telegram-bot==21.3
 python-telegram-bot[job-queue]
 
 selenium==4.22.0
-webdriver-manager==4.0.1
+webdriver-manager==4.0.2
+undetected_chromedriver==3.5.5
 xvfbwrapper==0.2.9
 
 aiohttp==3.9.5

@@ -12,7 +12,7 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
-from constants import VK_GROUP_NAME, IS_LINUX
+from source.constants import VK_GROUP_NAME, IS_LINUX
 from source.utils.WebDriverLinux import WebDriverLinux
 from source.utils.common import app_logger, parse_vk_datetime
 
@@ -184,7 +184,7 @@ class PostElement:
 
 class PostCollector:
     def __init__(self, url: str, driver: WebDriver):
-        self.driver = setup_driver()
+        self.driver = driver
         self.driver.get(url)
 
         self._current_element = 0

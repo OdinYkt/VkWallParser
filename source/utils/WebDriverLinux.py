@@ -5,7 +5,7 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from webdriver_manager.chrome import ChromeDriverManager
 import undetected_chromedriver as uc
 
-from TgBot.constants.common import IS_LINUX
+from source.constants import IS_LINUX
 
 if IS_LINUX:
     from xvfbwrapper import Xvfb
@@ -30,6 +30,7 @@ class WebDriverLinux:
             options.add_argument("headless")
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--lang=en-us")
         return uc.Chrome(options=options, driver_executable_path=ChromeDriverManager().install())
 
     @ONLY_LINUX

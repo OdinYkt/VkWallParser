@@ -35,7 +35,7 @@ async def activate_scheduler(job_queue: JobQueue):
 
     job_queue.run_repeating(
         run_tasks,
-        interval=INTERVAL_HOURS,
+        interval=timedelta(hours=INTERVAL_HOURS),
         first=10,
     )
     app_logger.info(f'Планировщик запущен c периодичностью {INTERVAL_HOURS} час')

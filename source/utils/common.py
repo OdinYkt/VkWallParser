@@ -2,17 +2,14 @@ import re
 import sys
 import asyncio
 import logging
-import hashlib
-import threading
-import traceback
 from datetime import datetime, timedelta, date
 
 from typing import Optional, List
 
 from telegram.error import RetryAfter, TimedOut
 
-from source.constants.paths import paths
-from source.constants.common import DEBUG_MODE, SLEEP_WHEN_ERROR
+from source.paths import paths
+from source.constants import SLEEP_WHEN_ERROR
 
 
 def setup_logger():
@@ -20,7 +17,7 @@ def setup_logger():
     logger.setLevel(logging.DEBUG)
 
     console_handler = logging.StreamHandler(sys.stdout)
-    console_level = logging.DEBUG if DEBUG_MODE else logging.INFO
+    console_level = logging.DEBUG
     console_handler.setLevel(console_level)
 
     file_handler = logging.FileHandler(str(paths.get_new_log_file()), encoding='utf-8')
@@ -32,8 +29,6 @@ def setup_logger():
 
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
-    if DEBUG_MODE:
-        logger.critical('DEBUG MODE ENABLED')
     return logger
 
 
