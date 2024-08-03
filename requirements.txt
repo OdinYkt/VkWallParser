@@ -1,6 +1,12 @@
-python-dotenv==1.0.1
+environs==11.0.0
+
+python-telegram-bot==21.3
+python-telegram-bot[job-queue]
+
 selenium==4.22.0
 webdriver-manager==4.0.1
 xvfbwrapper==0.2.9
+
+aiohttp==3.9.5
+
 waiting==1.4.1
-python-telegram-bot==21.3

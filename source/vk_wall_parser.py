@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
@@ -11,8 +12,9 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
-from utils import DisplayWrapper, parse_vk_datetime, app_logger
 from constants import VK_GROUP_NAME, IS_LINUX
+from source.utils.WebDriverLinux import WebDriverLinux
+from source.utils.common import app_logger, parse_vk_datetime
 
 
 def setup_driver() -> WebDriver:
@@ -181,7 +183,7 @@ class PostElement:
 
 
 class PostCollector:
-    def __init__(self, url: str):
+    def __init__(self, url: str, driver: WebDriver):
         self.driver = setup_driver()
         self.driver.get(url)
 
@@ -214,27 +216,28 @@ class VkParser:
         self.group_name = group_name
         self.now = datetime.now()
 
-    def get_posts(self, time_delta: timedelta) -> List[VkPost]:
+    def get_posts_sync(self, time_delta: timedelta) -> List[VkPost]:
         return self._collect_posts(time_delta)
 
     def _collect_posts(self, time_delta: timedelta) -> List[VkPost]:
         posts = []
-        post_collector = self._get_post_collector()
-        for post in post_collector:
-            if abs(post.date - self.now) > time_delta:
-                app_logger.info(f"Post doesn't match (id='{post.id}' time='{post.date}')")
-                app_logger.info(f"Collected : {len(posts)} posts")
 
-                post_collector.close_driver()
-                return posts
-            app_logger.info(f"Post {post} collected")
-            posts.append(post)
+        with WebDriverLinux() as driver:
+            post_collector = PostCollector(
+                url=self.vk_base_url+self.group_name,
+                driver=driver
+            )
+            for post in post_collector:
+                if abs(post.date - self.now) > time_delta:
+                    app_logger.info(f"Post doesn't match (id='{post.id}' time='{post.date}')")
+                    app_logger.info(f"Collected : {len(posts)} posts")
 
-    def _get_post_collector(self) -> PostCollector:
-        with DisplayWrapper():
-            return PostCollector(url=self.vk_base_url+self.group_name)
+                    post_collector.close_driver()
+                    return posts
+                app_logger.info(f"Post {post} collected")
+                posts.append(post)
 
 
 if __name__ == "__main__":
     parser = VkParser(group_name=VK_GROUP_NAME)
-    parsed_posts = parser.get_posts(time_delta=timedelta(days=1))
+    parsed_posts = parser.get_posts_sync(time_delta=timedelta(days=1))
